@@ -3,22 +3,51 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public class PlayerHandler : MonoBehaviour
 {
-    public List<Card> deck;
-    public List<Card> discard;
-    public List<Card> hand;
+    [Header("Scene Dependencies")]
+    public Transform handHolder;
+    public Transform deckHolder;
+    public Transform discardHolder;
+    public TMPro.TMP_Text deckCountText;
+    public TMPro.TMP_Text discardCountText;
+
+    [Header("Values")]
+    public float handSpacing;
+    public int maxHandSize;
+
+    // [Header("Card data")]
     const int BOARD_SIZE = 3 * 4; // board size is 12 - 3 rows x 4 columns
-    public List<BoardSlot> board;
+    protected List<Card> deck;
+    protected List<Card> discard;
+    protected List<Card> hand;
+    protected List<BoardSlot> board;
 
     public void Awake()
     {
+        deck = new List<Card>();
+        discard = new List<Card>();
+        hand = new List<Card>();
+        board = new List<BoardSlot>();
+
         // Currently a debug thing
         CreateDefaultDeck();
         discard.Clear();
         hand.Clear();
         board.Clear();
+    }
+
+    public void Start()
+    {
+        // starting hand size
+        for (int i = 0; i < 3; i++)
+        {
+            DrawCard();
+        }
+        deckCountText.text = $"Count: {deck.Count}";
+        discardCountText.text = $"Count: {discard.Count}";
     }
 
     public void ShuffleDeck()
@@ -36,16 +65,36 @@ public class PlayerHandler : MonoBehaviour
         }
     }
 
-    [ContextMenu("Try Draw")]
-    public bool TryDrawCard()
+    [ContextMenu("Draw Card")]
+    public void DrawCard()
     {
-        if (deck.Count == 0)
-            return false;
+        if (deck.Count == 0 || hand.Count >= maxHandSize)
+            return;
 
         Card card = deck[0];
         hand.Add(card);
         deck.RemoveAt(0);
-        return true;
+
+        CardHandler prefab = Resources.Load<CardHandler>("Prefabs/CardHandler");
+        CardHandler instance = Instantiate(prefab, deckHolder.transform.position + Vector3.up * 0.2f, handHolder.rotation, handHolder);
+        instance.SetCard(card);
+        instance.Owner = this;
+
+        AdjustHand();
+        deckCountText.text = $"Count: {deck.Count}";
+
+        return;
+    }
+
+    public void AdjustHand()
+    {
+        float xPos = (-handSpacing * (handHolder.childCount - 1)) * 0.5f;
+
+        for (int i = 0; i < handHolder.childCount; i++)
+        {
+            handHolder.GetChild(i).DOLocalMove(Vector3.right * xPos, 0.5f);
+            xPos += handSpacing;
+        }
     }
 
     public bool PlayCard(int handIndex, int boardIndex)
@@ -138,17 +187,17 @@ public class PlayerHandler : MonoBehaviour
         deck.Add(new CreatureCard(Resources.Load<Creature_SO>("Cards/Creatures/CreatureCard_06")));
 
         // Add a few Attack cards
-        deck.Add(new AttackCard(AttackType.MELEE));
-        deck.Add(new AttackCard(AttackType.MELEE));
-        deck.Add(new AttackCard(AttackType.MELEE));
-        deck.Add(new AttackCard(AttackType.MELEE));
-        deck.Add(new AttackCard(AttackType.MELEE));
+        deck.Add(new AttackCard(Resources.Load<Attack_SO>("Cards/ActionCards/MeleeAttack")));
+        deck.Add(new AttackCard(Resources.Load<Attack_SO>("Cards/ActionCards/MeleeAttack")));
+        deck.Add(new AttackCard(Resources.Load<Attack_SO>("Cards/ActionCards/MeleeAttack")));
+        deck.Add(new AttackCard(Resources.Load<Attack_SO>("Cards/ActionCards/MeleeAttack")));
+        deck.Add(new AttackCard(Resources.Load<Attack_SO>("Cards/ActionCards/MeleeAttack")));
 
-        deck.Add(new AttackCard(AttackType.RANGE));
-        deck.Add(new AttackCard(AttackType.RANGE));
-        deck.Add(new AttackCard(AttackType.RANGE));
-        deck.Add(new AttackCard(AttackType.RANGE));
-        deck.Add(new AttackCard(AttackType.RANGE));
+        deck.Add(new AttackCard(Resources.Load<Attack_SO>("Cards/ActionCards/RangedAttack")));
+        deck.Add(new AttackCard(Resources.Load<Attack_SO>("Cards/ActionCards/RangedAttack")));
+        deck.Add(new AttackCard(Resources.Load<Attack_SO>("Cards/ActionCards/RangedAttack")));
+        deck.Add(new AttackCard(Resources.Load<Attack_SO>("Cards/ActionCards/RangedAttack")));
+        deck.Add(new AttackCard(Resources.Load<Attack_SO>("Cards/ActionCards/RangedAttack")));
 
         // Shuffle the deck
         ShuffleDeck();

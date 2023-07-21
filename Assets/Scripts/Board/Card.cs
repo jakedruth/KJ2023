@@ -4,6 +4,7 @@ using UnityEngine;
 
 public enum AttackType
 {
+    BASE,
     MELEE,
     RANGE,
     SPECIAL,
@@ -14,39 +15,43 @@ public enum AttackType
 public class Card
 {
     public string name;
+    public Card_SO Card_SO;
+
+    public Card(Card_SO card)
+    {
+        Card_SO = card;
+        name = card.name;
+    }
 }
 
 [System.Serializable]
 public class CreatureCard : Card
 {
-    [SerializeField]
-    public Creature_SO cardReference;
+    public Creature_SO Creature_SO { get { return Card_SO as Creature_SO; } }
+
     public int currentHP;
 
-    public CreatureCard(Creature_SO card)
-    {
-        cardReference = card;
-        name = cardReference.name;
-    }
+    public CreatureCard(Creature_SO card) : base(card)
+    { }
 
     public void PlayCard()
     {
-        currentHP = cardReference.stats.HP;
+        currentHP = Creature_SO.GetHP();
     }
 
     public int GetHPValue()
     {
-        return cardReference.GetHP();
+        return Creature_SO.GetHP();
     }
 
     public int GetAttackValue(AttackType type)
     {
-        return cardReference.GetAttack(type);
+        return Creature_SO.GetAttack(type);
     }
 
     public int GetDefenseValue(AttackType type)
     {
-        return cardReference.GetDefense(type);
+        return Creature_SO.GetDefense(type);
     }
 
     public bool TakeDamage(int amount)
@@ -66,27 +71,26 @@ public class CreatureCard : Card
 [System.Serializable]
 public class ActionCard : Card
 {
-
+    public ActionCard(Card_SO card) : base(card)
+    { }
 }
 
 [System.Serializable]
 public class AttackCard : ActionCard
 {
-    public AttackType type;
+    public Attack_SO Attack_SO { get { return Card_SO as Attack_SO; } }
 
-    public AttackCard(AttackType attackType)
-    {
-        type = attackType;
-    }
+    public AttackCard(Attack_SO card) : base(card)
+    { }
 
     public void Use(CreatureCard attacker, CreatureCard defender)
     {
-        int att = attacker.GetAttackValue(type);
-        int def = defender.GetDefenseValue(type);
+        int att = attacker.GetAttackValue(Attack_SO.type);
+        int def = defender.GetDefenseValue(Attack_SO.type);
 
         int damage = att - def;
-        if (damage < 0)
-            damage = 0;
+        if (damage <= 0)
+            damage = 1;
 
         bool defenderIsDead = defender.TakeDamage(damage);
 

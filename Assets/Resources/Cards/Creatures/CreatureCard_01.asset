@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0115973f4b8e86e44923654622bae20c, type: 3}
   m_Name: CreatureCard_01
   m_EditorClassIdentifier: 
+  art: {fileID: 21300000, guid: adbd7eb2d4469f149939f2f70e005b00, type: 3}
   stats:
     HP: 3
     Attack: 2
